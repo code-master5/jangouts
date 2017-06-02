@@ -13,7 +13,7 @@
 
     RoomService.$inject = ['$q', '$rootScope', '$timeout', 'FeedsService', 'Room',
       'FeedConnection', 'DataChannelService', 'ActionService', 'jhConfig',
-      'ScreenShareService', 'RequestService'];
+      'ScreenShareService', 'RequestService', 'CallstatsService'];
 
   /**
    * Service to communication with janus room
@@ -22,7 +22,7 @@
    */
   function RoomService($q, $rootScope, $timeout, FeedsService, Room,
       FeedConnection, DataChannelService, ActionService, jhConfig,
-      ScreenShareService, RequestService) {
+      ScreenShareService, RequestService, CallstatsService) {
     this.enter = enter;
     this.leave = leave;
     this.setRoom = setRoom;
@@ -152,6 +152,9 @@
           if (event === "joined") {
             console.log("Successfully joined room " + msg.room);
             ActionService.enterRoom(msg.id, username, connection);
+            
+            // Initialize callstats
+            CallstatsService.initializeCallstats(FeedsService.findMain().display);
             // Step 3. Establish WebRTC connection with the Janus server
             // Step 4a (parallel with 4b). Publish our feed on server
 
