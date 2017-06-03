@@ -101,17 +101,30 @@
 
       return deferred.promise;
     }
-
+    
     function doEnter(username) {
+      console.log(":::This is username::: ", username);
+      // Initialize callstats
+      CallstatsService.initializeCallstats(username);
+      
       var $$rootScope = $rootScope;
       var connection = null;
-
+      
+      // for accessing localstream RTCPeerConnectionObject
+      that.pluginHandleLocal = null;
+      
       // Create new session
       that.janus.attach({
         plugin: "janus.plugin.videoroom",
         success: function(pluginHandle) {
+          
+          // accessing pluginHandle for RTCPeerConnectionObject
+          that.pluginHandleLocal = pluginHandle;
+          
           // Step 1. Right after attaching to the plugin, we send a
           // request to join
+          console.log(":::This is plugin Handle:::", pluginHandle);
+          
           connection = new FeedConnection(pluginHandle, that.room.id, "main");
           connection.register(username);
         },
@@ -134,10 +147,13 @@
           sendStatus();
         },
         onlocalstream: function(stream) {
+          
+          console.log(" ::: Got a local stream :::", that.pluginHandleLocal.webrtcStuff.pc);
+          
+          
           // Step 4b (parallel with 4a).
           // Send the created stream to the UI, so it can be attached to
           // some element of the local DOM
-          console.log(" ::: Got a local stream :::");
           var feed = FeedsService.findMain();
           feed.setStream(stream);
         },
@@ -153,8 +169,6 @@
             console.log("Successfully joined room " + msg.room);
             ActionService.enterRoom(msg.id, username, connection);
             
-            // Initialize callstats
-            CallstatsService.initializeCallstats(FeedsService.findMain().display);
             // Step 3. Establish WebRTC connection with the Janus server
             // Step 4a (parallel with 4b). Publish our feed on server
 
@@ -292,6 +306,9 @@
       if (feed) {
         display = feed.display;
       }
+      
+      // Sending RTCPeerConnectionObject to callstats
+      CallstatsService.sendPCObj(that.pluginHandleLocal.webrtcStuff.pc, display, this.getRoom().description);
 
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
@@ -331,6 +348,9 @@
           }
         },
         onremotestream: function(stream) {
+            
+          console.log("--- can be used to access pcObjRemote ---");
+          
           FeedsService.waitFor(id).then(function (feed) {
             feed.setStream(stream);
           }, function (reason) {

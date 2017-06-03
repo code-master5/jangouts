@@ -26,6 +26,7 @@
     this.AppSecret = "/BKw/++t+DXe:UCxvwuXdkE6AIuxHXRj5PnaKLNeAgNZdp6rGShdWNmc=";
     this.callstats = null;
     this.initializeCallstats = initializeCallstats;
+    this.sendPCObj = sendPCObj;
     
     // Step 2: Initialize with AppSecret
     /**
@@ -82,7 +83,33 @@
       };
       
     }
+  
+    // Step 3: Pass the PeerConnection object to the library - adding new Fabric
+    /**
+      * function for sending PeerConnection Object
+      * @param {object} pcObj - RTCPeerConnectionObject
+      */
+    function sendPCObj(pcObj, remoteUserID, conferenceID) {
+      
+      console.log("::: These are sendPCObj recieved parameters ::: ", pcObj, remoteUserID, conferenceID);
+      
+      // PeerConnection carrying multiple media streams on the same port
+      var fabricUsage = this.callstats.fabricUsage.multiplex;
+      
+      /**
+       * callback asynchronously reporting failure or success for pcObject.
+       * @param msg error message
+       */
+      function pcCallback (err, msg) {
+        console.log("Monitoring status: "+ err + " msg: " + msg);
+      }
+      
+      if (pcObj && remoteUserID && conferenceID) {
+        this.callstats.addNewFabric(pcObj, remoteUserID, fabricUsage, conferenceID, pcCallback);
+      } else {
+        console.log("Error: RTCPeerConnection, remoteUserID and conferenceID should be non null!");
+      }
+    }
     
-    // Step 3: Pass the PeerConnection object to the library
   }
 }());
