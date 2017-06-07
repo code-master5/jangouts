@@ -42,15 +42,15 @@
         this.pluginHandle.detach();
       };
 
-      this.register = function(display) {
+     this.register = function(display, pin) {
         console.log("::: Registering Peer Connection!");
-        var register = { "request": "join", "room": roomId, "ptype": "publisher", "display": display };
+        var register = { "request": "join", "room": roomId, "ptype": "publisher", "display": display, "pin": pin || "" };
         pluginHandle.send({"message": register});
       };
 
-      this.listen = function(feedId) {
+      this.listen = function(feedId, pin) {
         console.log("::: Listen Peer Connection!");
-        var listen = { "request": "join", "room": roomId, "ptype": "listener", "feed": feedId };
+        var listen = { "request": "join", "room": roomId, "ptype": "listener", "feed": feedId, "pin": pin || "" };
         pluginHandle.send({"message": listen});
       };
 
@@ -88,9 +88,11 @@
           }
           media.audioSend = true;
           media.data = true;
+          cfg.data = true;
         } else {
           // Publishing something but not "main" -> screen sharing
           cfg.audio = false;
+          cfg.data = false;
           media.video = this.role;
           media.audioSend = false;
           media.data = false;
@@ -149,6 +151,7 @@
         } else {
           this.config = new ConnectionConfig(pluginHandle, options.values, null, options.ok);
         }
+        
       };
 
       /**
