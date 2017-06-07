@@ -18,7 +18,7 @@
     this.user = null;
     this.settings = localStorageService.get(USER_SETTINGS_KEY) || {};
 
-    /*
+    /**
      * Returns the current (signed in) user.
      * @returns {object} An object representing the user like
      *                   { username: 'some-name' }
@@ -27,7 +27,7 @@
       return this.user;
     };
 
-    /*
+    /**
      * Sign in a user.
      * @param   {string} username Username.
      * @returns {object} An object representing the user like
@@ -37,7 +37,7 @@
       this.user = { username: username };
     };
 
-    /*
+    /**
      * Get all user settings.
      * @returns {object} An object containing all the settings.
      */
@@ -45,7 +45,7 @@
       return this.settings;
     };
 
-    /*
+    /**
      * Get the value for a given user setting.
      * @param   {string} key User setting key.
      * @returns {}       The value for the given setting.
@@ -54,7 +54,7 @@
       return this.settings[key];
     };
 
-    /*
+    /**
      * Remove a user setting.
      * @param   {string} key User setting key.
      * @returns {boolean}    True if the element was removed.
@@ -64,7 +64,7 @@
       this.storeSettings();
     };
 
-    /*
+    /**
      * Clear user settings.
      * @returns {boolean} True if storage was cleared.
      */
@@ -73,7 +73,7 @@
       return localStorageService.clearAll(USER_SETTINGS_KEY);
     };
 
-    /*
+    /**
      * Set the value for a given user setting.
      * @param   {string} key User setting key.
      * @param   {}       value User setting value.
@@ -83,7 +83,7 @@
       this.storeSettings();
     };
 
-    /*
+    /**
      * Store settings in the local storage.
      *
      * This function is not supposed to be called by users of the API.

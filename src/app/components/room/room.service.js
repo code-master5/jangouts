@@ -104,28 +104,26 @@
     
     function doEnter(username) {
       console.log(":::This is username::: ", username);
+      
       // Initialize callstats
       CallstatsService.initializeCallstats(username);
       
       var $$rootScope = $rootScope;
       var connection = null;
-      
-      // for accessing localstream RTCPeerConnectionObject
-      that.pluginHandleLocal = null;
-      
+      that.connectionObj = null;
       // Create new session
       that.janus.attach({
         plugin: "janus.plugin.videoroom",
+        opaqueId: username + (new Date().getTime()),
         success: function(pluginHandle) {
-          
-          // accessing pluginHandle for RTCPeerConnectionObject
-          that.pluginHandleLocal = pluginHandle;
           
           // Step 1. Right after attaching to the plugin, we send a
           // request to join
           console.log(":::This is plugin Handle:::", pluginHandle);
           
           connection = new FeedConnection(pluginHandle, that.room.id, "main");
+          that.connectionObj = connection;
+          console.log("::: Connection object :::", that.connectionObj);
           connection.register(username);
         },
         error: function(error) {
@@ -148,8 +146,9 @@
         },
         onlocalstream: function(stream) {
           
-          console.log(" ::: Got a local stream :::", that.pluginHandleLocal.webrtcStuff.pc);
-          
+          console.log(" ::: Got a local stream :::", connection.pluginHandle);
+          // notify that RTCPeerConnection object is recieved
+          CallstatsService.sendPCObj(that.connectionObj.pluginHandle.webrtcStuff.pc);
           
           // Step 4b (parallel with 4a).
           // Send the created stream to the UI, so it can be attached to
@@ -160,7 +159,11 @@
         oncleanup: function () {
           console.log(" ::: Got a cleanup notification: we are unpublished now :::");
         },
+        webrtcState: function (isActive, reason) {
+          console.log("::: State of WebRTC connection ::: ", isActive, reason);
+        },
         onmessage: function (msg, jsep) {
+          console.log("::: Message Parameters", msg, jsep);
           var event = msg.videoroom;
           console.log("Event: " + event);
 
@@ -225,10 +228,12 @@
       that.janus.attach({
         plugin: "janus.plugin.videoroom",
         success: function(pluginHandle) {
+          console.log("::: Getting Rooms List -- Plugin Handle Object :::", pluginHandle);
           console.log("getAvailableRooms plugin attached (" + pluginHandle.getPlugin() + ", id=" + pluginHandle.getId() + ")");
           var request = { "request": "list" };
           pluginHandle.send({"message": request, success: function(result) {
             // Free the resource (it looks safe to do it here)
+            console.log("::: Result of pluginHandle.send :::", result);
             pluginHandle.detach();
 
             if (result.videoroom === "success") {
@@ -295,6 +300,8 @@
         var feed = FeedsService.find(id);
         if (feed === null || feed.waitingForConnection()) {
           this.subscribeToFeed(id, display);
+          // Sending RTCPeerConnectionObject to callstats
+          CallstatsService.sendPCObj(that.connectionObj.pluginHandle.webrtcStuff.pc, display, this.getRoom().description);
         }
       }
     }
@@ -307,9 +314,8 @@
         display = feed.display;
       }
       
-      // Sending RTCPeerConnectionObject to callstats
-      CallstatsService.sendPCObj(that.pluginHandleLocal.webrtcStuff.pc, display, this.getRoom().description);
-
+      console.log("::: Working with :::", id, display);
+      
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
         success: function(pluginHandle) {
@@ -320,8 +326,7 @@
           console.error("  -- Error attaching plugin... " + error);
         },
         onmessage: function(msg, jsep) {
-          console.log(" ::: Got a message (listener) :::");
-          console.log(JSON.stringify(msg));
+          console.log(" ::: Got a message (listener) ::: ", msg, jsep);
           var event = msg.videoroom;
           console.log("Event: " + event);
           if (event === "attached") {
@@ -348,9 +353,7 @@
           }
         },
         onremotestream: function(stream) {
-            
-          console.log("--- can be used to access pcObjRemote ---");
-          
+          console.log("::: Got a remote stream ::: ", connection.pluginHandle);
           FeedsService.waitFor(id).then(function (feed) {
             feed.setStream(stream);
           }, function (reason) {
@@ -364,7 +367,7 @@
           sendStatus();
         },
         ondata: function(data) {
-          console.log(" ::: Got info in the data channel (subscriber) :::");
+          console.log(" ::: Got info in the data channel (subscriber) ::: ", data);
           DataChannelService.receiveMessage(data, id);
         },
         oncleanup: function() {

@@ -43,11 +43,13 @@
       };
 
       this.register = function(display) {
+        console.log("::: Registering Peer Connection!");
         var register = { "request": "join", "room": roomId, "ptype": "publisher", "display": display };
         pluginHandle.send({"message": register});
       };
 
       this.listen = function(feedId) {
+        console.log("::: Listen Peer Connection!");
         var listen = { "request": "join", "room": roomId, "ptype": "listener", "feed": feedId };
         pluginHandle.send({"message": listen});
       };
@@ -73,7 +75,7 @@
         options = options || {};
 
         var media = {videoRecv: false, audioRecv: false};
-        var cfg = {video: true, audio: true, data: true};
+        var cfg = {video: true, audio: true};
         if (this.role === "main") {
           if (options.muted){
             cfg.audio = false;
@@ -96,15 +98,13 @@
         pluginHandle.createOffer({
           media: media,
           success: function(jsep) {
-            console.log("Got publisher SDP!");
-            console.log(jsep);
+            console.log("Got publisher SDP!", jsep);
             that.config = new ConnectionConfig(pluginHandle, cfg, jsep);
             // Call the provided callback for extra actions
             if (options.success) { options.success(); }
           },
           error: function(error) {
-            console.error("WebRTC error publishing");
-            console.error(error);
+            console.error("WebRTC error publishing", error);
             // Call the provided callback for extra actions
             if (options.error) { options.error(); }
           }

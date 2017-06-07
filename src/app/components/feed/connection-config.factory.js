@@ -87,7 +87,7 @@
 
       function configure(options) {
         options = options || {};
-        var config = {request: "configure", data: true};
+        var config = {request: "configure"};
         requested = {};
 
         _.assign(requested, current, wanted);

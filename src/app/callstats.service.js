@@ -27,6 +27,8 @@
     this.callstats = null;
     this.initializeCallstats = initializeCallstats;
     this.sendPCObj = sendPCObj;
+    this.remainingRemotes = [];
+    this.addRemainingRemotes = addRemainingRemotes;
     
     // Step 2: Initialize with AppSecret
     /**
@@ -38,6 +40,7 @@
       console.log("-- Recieved display as localUserID --", localUserID);
       this.callstats = new window.callstats();
       
+      /*
       var res = this.callstats.initialize(this.AppID,
                                           this.AppSecret,
                                           localUserID,
@@ -46,6 +49,7 @@
                                           configParams);
       
       console.log("::: This is response object returned by callstats.io ::: ", res);
+      */
       /**
        * reports different success and failure cases
        * @param {string} csErrMsg a descriptive error returned by callstats.io
@@ -83,12 +87,12 @@
       };
       
     }
-  
+    
     // Step 3: Pass the PeerConnection object to the library - adding new Fabric
     /**
-      * function for sending PeerConnection Object
-      * @param {object} pcObj - RTCPeerConnectionObject
-      */
+     * function for sending PeerConnection Object
+     * @param {object} pcObj - RTCPeerConnectionObject
+     */
     function sendPCObj(pcObj, remoteUserID, conferenceID) {
       
       console.log("::: These are sendPCObj recieved parameters ::: ", pcObj, remoteUserID, conferenceID);
@@ -104,12 +108,52 @@
         console.log("Monitoring status: "+ err + " msg: " + msg);
       }
       
-      if (pcObj && remoteUserID && conferenceID) {
-        this.callstats.addNewFabric(pcObj, remoteUserID, fabricUsage, conferenceID, pcCallback);
+      if (remoteUserID && conferenceID) {
+        this.addRemainingRemotes(remoteUserID, conferenceID);
       } else {
-        console.log("Error: RTCPeerConnection, remoteUserID and conferenceID should be non null!");
+        if (!remoteUserID){
+          console.log("--- Error: Remote User ID is null!");
+        } 
+        if (!conferenceID) {
+          console.log("--- Error: Conference ID is null!");
+        } 
       }
+      
+      if (pcObj) {
+        while(this.remainingRemotes.length > 0) {
+          var current = this.remainingRemotes.shift();
+          console.log("::: Sending for: ", current);
+          //this.callstats.addNewFabric(pcObj, current[0],fabricUsage, current[1], pcCallback);
+        }
+      } else {
+        console.log("--- Error: RTCPeerConnection object is null!");
+      } 
     }
-    
+      
+      
+    // adds to remainingRemotes till RTCPeerConnection object is recieved
+    function addRemainingRemotes(remoteUserID, conferenceID) {
+        this.remainingRemotes.push([remoteUserID, conferenceID]);
+    }
+      
+      
+   /**
+    * function reporting error to callstats.io
+    * @param err error
+    */
+   /*
+    function createOfferError(err) {
+      this.callstats.reportError(pcObj, conferenceID, this.callstats.webRTCFunctions.createOffer, err);
+    }
+      
+    // "negotiationneeded" event triggers offer generation
+    pcObj.onnegotiationneeded = function () {
+    // create offer
+      pcObj.createOffer().then(
+        localDescriptionCreatedCallback,
+        createOfferErrorCallback
+      );
+    };
+    */  
   }
 }());
