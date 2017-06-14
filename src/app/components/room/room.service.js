@@ -77,10 +77,12 @@
       var deferred = $q.defer();
 
       if (that.janus === null) {
+        console.log("::: Initializing Janus :::");
         Janus.init({debug: jhConfig.janusDebug});
         that.janus = new Janus({
           server: that.server,
           success: function() {
+            console.log("::: Initialize Janus -- Success :::");
             deferred.resolve();
           },
           error: function(error) {
@@ -114,7 +116,7 @@
       // Create new session
       that.janus.attach({
         plugin: "janus.plugin.videoroom",
-        opaqueId: username + (new Date().getTime()),
+        opaqueId: username + (new Date()).getTime(),
         success: function(pluginHandle) {
           
           // Step 1. Right after attaching to the plugin, we send a
@@ -354,6 +356,7 @@
         onremotestream: function(stream) {
           console.log("::: Got a remote stream ::: ", connection.pluginHandle);
           FeedsService.waitFor(id).then(function (feed) {
+            console.log("::: Found feed :::");
             feed.setStream(stream);
           }, function (reason) {
             console.error(reason);
@@ -487,6 +490,7 @@
      * Hacky and dirty, we know.
      */
     function sendStatus() {
+      console.log("::: All publisher feeds ::: ",FeedsService.publisherFeeds());
       FeedsService.publisherFeeds().forEach(function (p) {
         DataChannelService.sendStatus(p, {exclude: "picture"});
         $timeout(function() { DataChannelService.sendStatus(p); }, 4000);

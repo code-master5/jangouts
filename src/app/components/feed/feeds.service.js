@@ -91,6 +91,7 @@
      */
     function add(feed, options) {
       feeds[feed.id] = feed;
+      console.log("::: Adding Feed! :::", feeds);
       if (options && options.main) {
         mainFeed = feed;
       }

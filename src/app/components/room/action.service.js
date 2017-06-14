@@ -35,9 +35,11 @@
         isPublisher: true
       });
       FeedsService.add(feed, {main: true});
+      console.log("::: entering room action! ::: ", feed);
     }
 
     function leaveRoom() {
+      console.log("::: leaving room action! :::");
       var that = this;
 
       _.forEach(FeedsService.allFeeds(), function(feed) {
@@ -60,6 +62,7 @@
     }
 
     function remoteJoin(feedId, display, connection) {
+      console.log("::: Remote Join :::");
       var feed = new Feed({
         display: display,
         connection: connection,

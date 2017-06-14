@@ -92,12 +92,13 @@
 
         _.assign(requested, current, wanted);
         _.assign(config, requested);
-
+        console.log("::: Sending Config message :::");
         pluginHandle.send({
           "message": config,
           jsep: options.jsep,
           success: function() {
             okCallback = options.ok;
+            console.log("::: Success on config message :::");
           },
           error: function() {
             requested = null;

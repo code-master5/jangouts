@@ -39,6 +39,7 @@
 
       this.destroy = function() {
         this.config = null;
+        console.log("::: Detach called :::");
         this.pluginHandle.detach();
       };
 
@@ -72,6 +73,7 @@
        * and some callbacks (success, error)
        */
       this.publish = function(options) {
+        console.log("::: Publishing Starts! :::");
         options = options || {};
 
         var media = {videoRecv: false, audioRecv: false};
@@ -102,6 +104,7 @@
           success: function(jsep) {
             console.log("Got publisher SDP!", jsep);
             that.config = new ConnectionConfig(pluginHandle, cfg, jsep);
+            console.log("::: Publish options ::: ", options);
             // Call the provided callback for extra actions
             if (options.success) { options.success(); }
           },
@@ -118,6 +121,8 @@
        * to a feed from the janus server.
        */
       this.subscribe = function(jsep) {
+        console.log("::: Creating answer :::");
+        var rjsep = jsep;
         pluginHandle.createAnswer({
           jsep: jsep,
           media: {
@@ -127,7 +132,7 @@
           },
           success: function(jsep) {
             console.log("Got SDP!");
-            console.log(jsep);
+            console.log("::: compare jseps :::", rjsep, jsep);
             var start = { "request": "start", "room": roomId };
             pluginHandle.send({message: start, jsep: jsep});
           },

@@ -24,6 +24,7 @@
       this.id = this.room;
       /** @var {String} label - room label including number of participants */
       this.label = this.description + " (" + this.num_participants + "/" + this.max_publishers + " users)";
+      console.log("::: Final Room Object :::", this);
     };
   }
 })();

@@ -128,6 +128,7 @@
        * @param {object} val - janus stream
        */
       this.setStream = function(val) {
+        console.log("::: Setting stream :::", this.getDisplay(), val);
         if (this.isPublisher && !this.isLocalScreen) {
           speakObserver = new SpeakObserver(val, {
             start: function() {
@@ -362,6 +363,7 @@
       this.setDisplay = function (val) {
         this.display = val;
       };
+      
       /**
        * Reads the representation of the local feed in order to send it to the
        * remote peers.

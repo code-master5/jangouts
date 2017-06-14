@@ -28,6 +28,7 @@
     }
 
     function allEntries() {
+      console.log("::: All log entries demanded! :::");
       return this.entries;
     }
   }
