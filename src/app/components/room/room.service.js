@@ -105,14 +105,9 @@
     }
     
     function doEnter(username) {
-      console.log(":::This is username::: ", username);
-      
-      // Initialize callstats
-      CallstatsService.initializeCallstats(username);
       
       var $$rootScope = $rootScope;
       var connection = null;
-      that.connectionObj = null;
       // Create new session
       that.janus.attach({
         plugin: "janus.plugin.videoroom",
@@ -122,10 +117,7 @@
           // Step 1. Right after attaching to the plugin, we send a
           // request to join
           console.log(":::This is plugin Handle:::", pluginHandle);
-          
-          connection = new FeedConnection(pluginHandle, that.room.id, "main");
-          that.connectionObj = connection;
-          console.log("::: Connection object :::", that.connectionObj);
+          connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, "main");
           connection.register(username, UserService.getPin());
         },
         error: function(error) {
@@ -148,9 +140,9 @@
         },
         onlocalstream: function(stream) {
           
-          console.log(" ::: Got a local stream :::", connection.pluginHandle);
+          console.log(" ::: Local PeerConnection :::", connection.pluginHandle.webrtcStuff.pc);
           // notify that RTCPeerConnection object is recieved
-          CallstatsService.sendPCObj(that.connectionObj.pluginHandle.webrtcStuff.pc);
+          CallstatsService.sendPCObject(connection.pluginHandle.webrtcStuff.pc, "Janus", that.getRoom().description);
           
           // Step 4b (parallel with 4a).
           // Send the created stream to the UI, so it can be attached to
@@ -254,6 +246,10 @@
 
     // Enter the room
     function enter(username) {
+      console.log(":::This is username::: ", username);
+      // Initialize callstats
+      CallstatsService.initializeCallstats(username);
+      
       var deferred = $q.defer();
 
       connect().then(function () {
@@ -268,6 +264,7 @@
     }
 
     function setRoom(room) {
+      console.log("Setting Room: ", room);
       this.room = room;
     }
 
@@ -301,8 +298,6 @@
         var feed = FeedsService.find(id);
         if (feed === null || feed.waitingForConnection()) {
           this.subscribeToFeed(id, display);
-          // Sending RTCPeerConnectionObject to callstats
-          CallstatsService.sendPCObj(that.connectionObj.pluginHandle.webrtcStuff.pc, display, this.getRoom().description);
         }
       }
     }
@@ -310,7 +305,7 @@
     function subscribeToFeed(id, display) {
       var feed = FeedsService.find(id);
       var connection = null;
-
+      
       if (feed) {
         display = feed.display;
       }
@@ -320,7 +315,7 @@
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
         success: function(pluginHandle) {
-          connection = new FeedConnection(pluginHandle, that.room.id, "subscriber");
+          connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, "subscriber");
           connection.listen(id, UserService.getPin());
         },
         error: function(error) {
@@ -354,7 +349,10 @@
           }
         },
         onremotestream: function(stream) {
-          console.log("::: Got a remote stream ::: ", connection.pluginHandle);
+          console.log("::: Got a remote stream ::: ", stream);
+           // notify that RTCPeerConnection object is recieved
+          CallstatsService.sendPCObject(connection.pluginHandle.webrtcStuff.pc, "Janus", that.getRoom().description);
+          
           FeedsService.waitFor(id).then(function (feed) {
             console.log("::: Found feed :::");
             feed.setStream(stream);
@@ -386,7 +384,7 @@
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
         success: function(pluginHandle) {
-          connection = new FeedConnection(pluginHandle, that.room.id, videoSource);
+          connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, videoSource);
           connection.register(display, UserService.getPin());
           ScreenShareService.setInProgress(true);
         },
@@ -395,11 +393,26 @@
         },
         onlocalstream: function(stream) {
           console.log(" ::: Got the screen stream :::");
+          
+          // notify that RTCPeerConnection object is recieved
+          CallstatsService.sendPCObject(connection.pluginHandle.webrtcStuff.pc,
+                                        "Janus",
+                                        that.getRoom().description);
+          
+          // notify screenShareStart event to callstats.io
+          CallstatsService.sendEvents(connection.pluginHandle.webrtcStuff.pc,
+                                      that.getRoom().description,
+                                      "screenShareStart");
+          
           var feed = FeedsService.find(id);
           feed.setStream(stream);
 
           // Unpublish feed when screen sharing stops
           stream.onended = function () {
+            // notify screenShareStop event to callstats.io
+            CallstatsService.sendEvents(connection.pluginHandle.webrtcStuff.pc,
+                                        that.getRoom().description,
+                                        "screenShareStop");
             unPublishFeed(id);
             ScreenShareService.setInProgress(false);
           };

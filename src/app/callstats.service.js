@@ -19,28 +19,27 @@
    * @memberof module:janusHangouts
    */
   function CallstatsService() {
-    
+
     // Step 1: Include callstats.js - done {index.html}
-    
+
     this.AppID     = "724446896";
     this.AppSecret = "/BKw/++t+DXe:UCxvwuXdkE6AIuxHXRj5PnaKLNeAgNZdp6rGShdWNmc=";
     this.callstats = null;
     this.initializeCallstats = initializeCallstats;
-    this.sendPCObj = sendPCObj;
-    this.remainingRemotes = [];
-    this.addRemainingRemotes = addRemainingRemotes;
-    
+    this.sendPCObject = sendPCObject;
+    this.reportErrors = reportErrors;
+    this.sendEvents = sendEvents;
     // Step 2: Initialize with AppSecret
     /**
      * Initialize the app with application tokens
      * @param localUserID display of the user
      */
     function initializeCallstats(localUserID) {
-      
+
       console.log("-- Recieved display as localUserID --", localUserID);
       this.callstats = new window.callstats();
-      
-      /*
+      console.log("This is callstats object -- ", this.callstats);
+
       var res = this.callstats.initialize(this.AppID,
                                           this.AppSecret,
                                           localUserID,
@@ -49,25 +48,26 @@
                                           configParams);
       
       console.log("::: This is response object returned by callstats.io ::: ", res);
-      */
+
       /**
        * reports different success and failure cases
        * @param {string} csErrMsg a descriptive error returned by callstats.io
        */
       function csInitCallback(csError, csErrMsg) {
-          console.log("Status: errCode= " + csError + " errMsg= " + csErrMsg );
+          console.log("Initialize return status: errCode= " + csError + " errMsg= " + csErrMsg );
       }
-      
+
       var reportType = {
         inbound: 'inbound',
         outbound: 'outbound'
       };
-      
+
       /**
        * callback function to receive the stats
        * @param stats
        */
       function csStatsCallback (stats) {
+        console.log("These are Initialize recieved stats: ", stats);
         var ssrc;
         for (ssrc in stats.streams) {
           console.log("SSRC is: ", ssrc);
@@ -80,26 +80,26 @@
           }
         }
       }
-      
+
       var configParams = {
         disableBeforeUnloadHandler: false, // disables callstats.js's window.onbeforeunload parameter.
-        applicationVersion: "0.4.5" // Application version specified by the developer.
+        applicationVersion: "0.4.6" // Application version specified by the developer.
       };
-      
+
     }
-    
+
     // Step 3: Pass the PeerConnection object to the library - adding new Fabric
     /**
      * function for sending PeerConnection Object
-     * @param {object} pcObj - RTCPeerConnectionObject
+     * @param {object} pcObject - RTCPeerConnectionObject
      */
-    function sendPCObj(pcObj, remoteUserID, conferenceID) {
-      
-      console.log("::: These are sendPCObj recieved parameters ::: ", pcObj, remoteUserID, conferenceID);
-      
+    function sendPCObject(pcObject, remoteUserID, conferenceID) {
+
+      console.log("::: These are sendPCObject recieved parameters ::: ", pcObject, remoteUserID, conferenceID);
+
       // PeerConnection carrying multiple media streams on the same port
-      var fabricUsage = this.callstats.fabricUsage.multiplex;
-      
+      var usage = this.callstats.fabricUsage.multiplex;
+
       /**
        * callback asynchronously reporting failure or success for pcObject.
        * @param msg error message
@@ -107,53 +107,37 @@
       function pcCallback (err, msg) {
         console.log("Monitoring status: "+ err + " msg: " + msg);
       }
-      
-      if (remoteUserID && conferenceID) {
-        this.addRemainingRemotes(remoteUserID, conferenceID);
+
+      if (remoteUserID && conferenceID && pcObject) {
+        this.callstats.addNewFabric(pcObject, remoteUserID, usage, conferenceID, pcCallback);
       } else {
-        if (!remoteUserID){
-          console.log("--- Error: Remote User ID is null!");
-        } 
-        if (!conferenceID) {
-          console.log("--- Error: Conference ID is null!");
-        } 
+        console.log("Error: Faulty Parameters! ", pcObject, remoteUserID, conferenceID);
       }
-      
-      if (pcObj) {
-        while(this.remainingRemotes.length > 0) {
-          var current = this.remainingRemotes.shift();
-          console.log("::: Sending for: ", current);
-          //this.callstats.addNewFabric(pcObj, current[0],fabricUsage, current[1], pcCallback);
-        }
-      } else {
-        console.log("--- Error: RTCPeerConnection object is null!");
-      } 
+
     }
-      
-      
-    // adds to remainingRemotes till RTCPeerConnection object is recieved
-    function addRemainingRemotes(remoteUserID, conferenceID) {
-        this.remainingRemotes.push([remoteUserID, conferenceID]);
-    }
-      
-      
+
+    // Step 4: Error Reporting
    /**
-    * function reporting error to callstats.io
-    * @param err error
+    * function reporting error and WebRTC functionType to callstats.io
+    * @param err DomError
+    * @param functionType WebRTC function in which error occurred
     */
-   /*
-    function createOfferError(err) {
-      this.callstats.reportError(pcObj, conferenceID, this.callstats.webRTCFunctions.createOffer, err);
+    function reportErrors(pcObject, conferenceID, err, functionType) {
+      console.log("::: reporting error ::: ", err, functionType);
+      this.callstats.reportError(pcObject, conferenceID, this.callstats.webRTCFunctions[functionType], err);
     }
-      
-    // "negotiationneeded" event triggers offer generation
-    pcObj.onnegotiationneeded = function () {
-    // create offer
-      pcObj.createOffer().then(
-        localDescriptionCreatedCallback,
-        createOfferErrorCallback
-      );
-    };
-    */  
+
+    // OPTIONAL STEPS
+
+    // Step 5: Send fabric events
+    /**
+    * function reporting fabric events to callstats.io
+    * @param err DomError
+    */
+    function sendEvents(pcObject, conferenceID, event) {
+      console.log("::: Sending Event ::: ", event);
+      this.callstats.sendFabricEvent(pcObject, this.callstats.fabricEvent[event], conferenceID);
+    }
+
   }
 }());

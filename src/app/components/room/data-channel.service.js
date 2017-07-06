@@ -52,6 +52,7 @@
     }
 
     function sendMuteRequest(feed) {
+      console.log("Sending Mute Request to: ", feed.display);
       var content = {
         target: feed.id,
       };

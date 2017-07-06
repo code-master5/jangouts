@@ -15,14 +15,14 @@
   angular.module('janusHangouts')
     .factory('Feed', feedFactory);
 
-  feedFactory.$inject = ['$timeout', 'DataChannelService', 'SpeakObserver'];
+  feedFactory.$inject = ['$timeout', 'DataChannelService', 'SpeakObserver', 'CallstatsService'];
 
   /**
    * Factory representing a janus feed
    * @constructor
    * @memberof module:janusHangouts
    */
-  function feedFactory($timeout, DataChannelService, SpeakObserver) {
+  function feedFactory($timeout, DataChannelService, SpeakObserver, CallstatsService) {
     return function(attrs) {
       attrs = attrs || {};
       var that = this;
@@ -92,6 +92,7 @@
        * @param {boolean} enabled
        */
       this.setEnabledTrack = function(type, enabled) {
+        console.log("Called setEnabledTrack for : ", type, enabled);
         var track = getTrack(type);
         if (track !== null) {
           track.enabled = enabled;
@@ -167,6 +168,7 @@
        * Sets if audio is enabled for this feed. Works only for remote ones.
        */
       this.setAudioEnabled = function(val) {
+        console.log("::: Setting Audio ::: ", val);
         audioRemoteEnabled = val;
       };
 
@@ -279,6 +281,7 @@
         options = options || {};
 
         if (this.isPublisher) {
+          console.log("Trying to: ", enabled, type, options);
           var config = {};
           config[type] = enabled;
           this.connection.setConfig({
@@ -291,6 +294,19 @@
                 if (options.after) { options.after(); }
                 // Send the new status to remote peers
                 DataChannelService.sendStatus(that, {exclude: "picture"});
+                
+                if (type === 'video') { 
+                  // Sending videoPause OR videoResume Event to callstats.io
+                  CallstatsService.sendEvents(that.connection.pluginHandle.webrtcStuff.pc,
+                                              that.connection.roomDesc,
+                                              "video" + ((enabled === false) ? "Pause" : "Resume"));
+                } else if (type === 'audio') {
+                  // Sending audioMute OR audioUnmute Event to callstats.io
+                  CallstatsService.sendEvents(that.connection.pluginHandle.webrtcStuff.pc,
+                                              that.connection.roomDesc,
+                                              "audio" + ((enabled === false) ? "Mute" : "Unmute"));
+                }
+                
               });
             }
           });
