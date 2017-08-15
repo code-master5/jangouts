@@ -112,7 +112,7 @@
         success: function(pluginHandle) {
           // Step 1. Right after attaching to the plugin, we send a
           // request to join
-          connection = new FeedConnection(pluginHandle, that.room.id, "main");
+          connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, "main");
           connection.register(username, UserService.getPin());
         },
         error: function(error) {
@@ -292,7 +292,7 @@
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
         success: function(pluginHandle) {
-          connection = new FeedConnection(pluginHandle, that.room.id, "subscriber");
+          connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, "subscriber");
           connection.listen(id, UserService.getPin());
         },
         error: function(error) {
@@ -357,7 +357,7 @@
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
         success: function(pluginHandle) {
-          connection = new FeedConnection(pluginHandle, that.room.id, videoSource);
+          connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, videoSource);
           connection.register(display, UserService.getPin());
           ScreenShareService.setInProgress(true);
         },

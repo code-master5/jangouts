@@ -28,12 +28,14 @@
    *  windows.
    */
   function feedConnectionFactory(ConnectionConfig) {
-    return function(pluginHandle, roomId, role) {
+    return function(pluginHandle, roomId, roomDesc, role) {
       var that = this;
 
       this.pluginHandle = pluginHandle;
       this.role = role || "subscriber";
       this.isDataOpen = false;
+      this.roomDesc = roomDesc;
+      this.roomId = roomId;
       this.config = null;
       console.log(this.role + " plugin attached (" + pluginHandle.getPlugin() + ", id=" + pluginHandle.getId() + ")");
 
