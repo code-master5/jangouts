@@ -51,6 +51,9 @@
      * @returns {}       The value for the given setting.
      */
     this.getSetting = function(key) {
+      if (key === 'lastDeviceID' && this.settings[key] === undefined){
+        this.setSetting('lastDeviceID', randomString(20));
+      }
       return this.settings[key];
     };
 
@@ -96,7 +99,7 @@
     
     // Pin entered by user
     this.enteredPin = null;
-    /*
+    /**
      * Returns the pin as entered by the current user.
      * @returns string A string representing the user like
      *                
@@ -105,12 +108,26 @@
       return this.enteredPin;
     };
 
-    /*
+    /**
      * Set the pin to value entered by current user.
      * @param   {string} val User entered pin.
      */
     this.setPin = function(value) {
       this.enteredPin = value;
     };
+    /**
+     * Function for generating deviceID as a random string
+     * @param {len} length of the generated random string
+     */
+    var randomString = function(len) {
+      var charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var randomString = '';
+      for (var i = 0; i < len; i++) {
+        var randomPoz = Math.floor(Math.random() * charSet.length);
+        randomString += charSet.substring(randomPoz,randomPoz+1);
+      }
+      return randomString;
+    };
+    
   }
 })();

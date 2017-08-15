@@ -108,10 +108,18 @@
       
       var $$rootScope = $rootScope;
       var connection = null;
+      var roomName = that.room.description;
+      var roomID = that.room.id;
+      var deviceID = UserService.getSetting('lastDeviceID');
       // Create new session
       that.janus.attach({
         plugin: "janus.plugin.videoroom",
-        opaqueId: username + (new Date()).getTime(),
+        opaqueId: JSON.stringify({ 
+          userID: username,
+          deviceID: deviceID,
+          confID: roomName,
+          confNum: roomID
+        }, 3),
         success: function(pluginHandle) {
           
           // Step 1. Right after attaching to the plugin, we send a

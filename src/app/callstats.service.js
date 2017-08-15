@@ -39,7 +39,7 @@
       console.log("-- Recieved display as localUserID --", localUserID);
       this.callstats = new window.callstats();
       console.log("This is callstats object -- ", this.callstats);
-
+/*
       var res = this.callstats.initialize(this.AppID,
                                           this.AppSecret,
                                           localUserID,
@@ -47,7 +47,7 @@
                                           csStatsCallback,
                                           configParams);
       
-      console.log("::: This is response object returned by callstats.io ::: ", res);
+      console.log("::: This is response object returned by callstats.io ::: ", res);*/
 
       /**
        * reports different success and failure cases
@@ -109,7 +109,7 @@
       }
 
       if (remoteUserID && conferenceID && pcObject) {
-        this.callstats.addNewFabric(pcObject, remoteUserID, usage, conferenceID, pcCallback);
+//         this.callstats.addNewFabric(pcObject, remoteUserID, usage, conferenceID, pcCallback);
       } else {
         console.log("Error: Faulty Parameters! ", pcObject, remoteUserID, conferenceID);
       }
@@ -124,7 +124,7 @@
     */
     function reportErrors(pcObject, conferenceID, err, functionType) {
       console.log("::: reporting error ::: ", err, functionType);
-      this.callstats.reportError(pcObject, conferenceID, this.callstats.webRTCFunctions[functionType], err);
+//       this.callstats.reportError(pcObject, conferenceID, this.callstats.webRTCFunctions[functionType], err);
     }
 
     // OPTIONAL STEPS
@@ -136,7 +136,7 @@
     */
     function sendEvents(pcObject, conferenceID, event) {
       console.log("::: Sending Event ::: ", event);
-      this.callstats.sendFabricEvent(pcObject, this.callstats.fabricEvent[event], conferenceID);
+      //this.callstats.sendFabricEvent(pcObject, this.callstats.fabricEvent[event], conferenceID);
     }
 
   }
