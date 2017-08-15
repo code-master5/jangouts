@@ -18,7 +18,7 @@
     this.user = null;
     this.settings = localStorageService.get(USER_SETTINGS_KEY) || {};
 
-    /*
+    /**
      * Returns the current (signed in) user.
      * @returns {object} An object representing the user like
      *                   { username: 'some-name' }
@@ -27,7 +27,7 @@
       return this.user;
     };
 
-    /*
+    /**
      * Sign in a user.
      * @param   {string} username Username.
      * @returns {object} An object representing the user like
@@ -37,7 +37,7 @@
       this.user = { username: username };
     };
 
-    /*
+    /**
      * Get all user settings.
      * @returns {object} An object containing all the settings.
      */
@@ -45,16 +45,19 @@
       return this.settings;
     };
 
-    /*
+    /**
      * Get the value for a given user setting.
      * @param   {string} key User setting key.
      * @returns {}       The value for the given setting.
      */
     this.getSetting = function(key) {
+      if (key === 'lastDeviceID' && this.settings[key] === undefined){
+        this.setSetting('lastDeviceID', randomString(20));
+      }
       return this.settings[key];
     };
 
-    /*
+    /**
      * Remove a user setting.
      * @param   {string} key User setting key.
      * @returns {boolean}    True if the element was removed.
@@ -64,7 +67,7 @@
       this.storeSettings();
     };
 
-    /*
+    /**
      * Clear user settings.
      * @returns {boolean} True if storage was cleared.
      */
@@ -73,7 +76,7 @@
       return localStorageService.clearAll(USER_SETTINGS_KEY);
     };
 
-    /*
+    /**
      * Set the value for a given user setting.
      * @param   {string} key User setting key.
      * @param   {}       value User setting value.
@@ -83,7 +86,7 @@
       this.storeSettings();
     };
 
-    /*
+    /**
      * Store settings in the local storage.
      *
      * This function is not supposed to be called by users of the API.
@@ -96,7 +99,8 @@
     
     // Pin entered by user
     this.enteredPin = null;
-    /*
+    
+    /**
      * Returns the pin as entered by the current user.
      * @returns string A string representing the user like
      *                
@@ -105,12 +109,27 @@
       return this.enteredPin;
     };
 
-    /*
+    /**
      * Set the pin to value entered by current user.
      * @param   {string} val User entered pin.
      */
     this.setPin = function(value) {
       this.enteredPin = value;
     };
+    
+    /**
+     * Function for generating deviceID as a random string
+     * @param {len} length of the generated random string
+     */
+    var randomString = function(len) {
+      var charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var randomString = '';
+      for (var i = 0; i < len; i++) {
+        var randomPoz = Math.floor(Math.random() * charSet.length);
+        randomString += charSet.substring(randomPoz,randomPoz+1);
+      }
+      return randomString;
+    };
+    
   }
 })();
