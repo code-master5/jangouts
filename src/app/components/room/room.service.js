@@ -13,7 +13,7 @@
 
     RoomService.$inject = ['$q', '$rootScope', '$timeout', 'FeedsService', 'Room',
       'FeedConnection', 'DataChannelService', 'ActionService', 'jhConfig',
-      'ScreenShareService', 'RequestService', 'UserService'];
+      'ScreenShareService', 'RequestService', 'UserService', 'jhEventsObservable' ];
 
   /**
    * Service to communication with janus room
@@ -22,7 +22,7 @@
    */
   function RoomService($q, $rootScope, $timeout, FeedsService, Room,
       FeedConnection, DataChannelService, ActionService, jhConfig,
-      ScreenShareService, RequestService, UserService) {
+      ScreenShareService, RequestService, UserService, jhEventsObservable) {
     this.enter = enter;
     this.leave = leave;
     this.setRoom = setRoom;
@@ -230,6 +230,10 @@
 
     // Enter the room
     function enter(username) {
+      jhEventsObservable.onNext({
+        type: "username",
+        username: username
+      });
       var deferred = $q.defer();
 
       connect().then(function () {

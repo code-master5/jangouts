@@ -1,5 +1,5 @@
 /** 
- * @file      events.provider.js
+ * @file      callstats.service.js
  * @author    Bimalkant Lauhny <lauhny.bimalk@gmail.com>
  * @copyright MIT License
  * @brief     A service that subscribes to eventsObservable
@@ -30,6 +30,21 @@
     this.sendPCObject = sendPCObject;
     this.reportErrors = reportErrors;
     this.sendEvents = sendEvents;
+      console.log("Hey");
+    var eventSubscription = jhEventsObservable.subscribe(function (x) {console.log(x);});
+    
+    function eventHandler(event) {
+      console.log("Received Event: ", event);
+      var eventType = event.type;
+      switch(eventType) {
+        case 'username':
+          initializeCallstats(event.username);
+          break;
+        default: 
+          break;
+      }
+    }
+    
     // Step 2: Initialize with AppSecret
     /**
      * Initialize the app with application tokens

@@ -13,9 +13,9 @@
       /* Rx object */
       var Rx = window.Rx;
       var eventsObservable = new Rx.Subject();
-
       return {
         $get: function () {
+          console.log(eventsObservable);
           return eventsObservable;
         }
       };
