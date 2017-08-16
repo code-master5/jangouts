@@ -137,8 +137,14 @@
           console.log("Received Event: ", event);
           var eventType = event.type;
           switch(eventType) {
-            case 'username':
-              this.initializeCallstats(event.username);
+            case 'user':
+              this.initializeCallstats(event.opaqueId.user);
+              break;
+            case 'stream':
+//               this.initializeCallstats(event.username);
+              break;
+            case 'screenshare':
+//               this.initializeCallstats(event.username);
               break;
             default: 
               break;

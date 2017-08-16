@@ -51,8 +51,8 @@
      * @returns {}       The value for the given setting.
      */
     this.getSetting = function(key) {
-      if (key === 'lastDeviceID' && this.settings[key] === undefined){
-        this.setSetting('lastDeviceID', randomString(20));
+      if (key === 'lastDeviceId' && this.settings[key] === undefined){
+        this.setSetting('lastDeviceId', randomString(20));
       }
       return this.settings[key];
     };

@@ -105,10 +105,24 @@
     function doEnter(username) {
       var $$rootScope = $rootScope;
       var connection = null;
-
+      
+      var opaqueId = {
+        user: username,
+        roomId: that.room.id,
+        roomDesc: that.room.description,
+        deviceId: UserService.getSetting('lastDeviceId')
+      };
+      // sending userDetails event
+      jhEventsProvider.eventsSubject.onNext({
+        type: "user",
+        timestamp: Date.now(),
+        opaqueId: opaqueId
+      });
+      
       // Create new session
       that.janus.attach({
         plugin: "janus.plugin.videoroom",
+        opaque_id: JSON.stringify(opaqueId),
         success: function(pluginHandle) {
           // Step 1. Right after attaching to the plugin, we send a
           // request to join
@@ -137,7 +151,19 @@
           // Step 4b (parallel with 4a).
           // Send the created stream to the UI, so it can be attached to
           // some element of the local DOM
-          console.log(" ::: Got a local stream :::");
+          console.log("::: Got a local stream :::");
+          
+          // emit `localstream` event
+          jhEventsProvider.eventsSubject.onNext({
+            type: "stream",
+            timestamp: Date.now(),
+            opaqueId: opaqueId,
+            data: {
+              stream: "local",
+              peerconnection: connection.pluginHandle.webrtcStuff.pc
+            }
+          });
+          
           var feed = FeedsService.findMain();
           feed.setStream(stream);
         },
@@ -230,10 +256,6 @@
 
     // Enter the room
     function enter(username) {
-      jhEventsProvider.eventsSubject.onNext({
-        type: "username",
-        username: username
-      });
       var deferred = $q.defer();
 
       connect().then(function () {
@@ -292,9 +314,24 @@
       if (feed) {
         display = feed.display;
       }
-
+      
+      var opaqueId = {
+        user: display,
+        roomId: that.room.id,
+        roomDesc: that.room.description,
+        deviceId: UserService.getSetting('lastDeviceId')
+      };
+      
+      // emit `subscribe` event
+      jhEventsProvider.eventsSubject.onNext({
+        type: "subscribe",
+        timestamp: Date.now(),
+        opaqueId: opaqueId
+      });
+      
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
+        opaque_id: JSON.stringify(opaqueId),
         success: function(pluginHandle) {
           connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, "subscriber");
           connection.listen(id, UserService.getPin());
@@ -331,6 +368,17 @@
           }
         },
         onremotestream: function(stream) {
+          // emit `remotestream` event
+          jhEventsProvider.eventsSubject.onNext({
+            type: "stream",
+            timestamp: Date.now(),
+            opaqueId: opaqueId,
+            data: {
+              stream: "remote",
+              peerconnection: connection.pluginHandle.webrtcStuff.pc
+            }
+          });
+          
           FeedsService.waitFor(id).then(function (feed) {
             feed.setStream(stream);
           }, function (reason) {
@@ -357,9 +405,23 @@
       var display = FeedsService.findMain().display;
       var connection;
       var id;
-
+      var opaqueId = {
+        user: display,
+        roomId: that.room.id,
+        roomDesc: that.room.description,
+        deviceId: UserService.getSetting('lastDeviceId')
+      };
+        
+      // emit `screenshare` event 
+      jhEventsProvider.eventsSubject.onNext({
+        type: "screenshare",
+        timestamp: Date.now(),
+        opaqueId: opaqueId
+      });
+      
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
+        opaque_id: JSON.stringify(opaqueId),
         success: function(pluginHandle) {
           connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, videoSource);
           connection.register(display, UserService.getPin());
@@ -369,12 +431,47 @@
           console.error("  -- Error attaching screen plugin... " + error);
         },
         onlocalstream: function(stream) {
+          
+          // emit 'localstream' event
+          jhEventsProvider.eventsSubject.onNext({
+            type: "stream",
+            timestamp: Date.now(),
+            opaqueId: opaqueId,
+            data: {
+              stream: "local",
+              peerconnection: connection.pluginHandle.webrtcStuff.pc
+            }
+          });
+          
+          
+          // emit 'screeshareStart' event
+          jhEventsProvider.eventsSubject.onNext({
+            type: "screenshare",
+            timestamp: Date.now(),
+            opaqueId: opaqueId,
+            data: {
+              status: "start",
+              peerconnection: connection.pluginHandle.webrtcStuff.pc
+            }
+          });
+          
           console.log(" ::: Got the screen stream :::");
           var feed = FeedsService.find(id);
           feed.setStream(stream);
 
           // Unpublish feed when screen sharing stops
           stream.onended = function () {
+            // emit 'screenshareStop' event
+            jhEventsProvider.eventsSubject.onNext({
+              type: "screenshare",
+              timestamp: Date.now(),
+              opaqueId: opaqueId,
+              data: {
+                status: "stop",
+                peerconnection: connection.pluginHandle.webrtcStuff.pc
+              }
+            });
+            
             unPublishFeed(id);
             ScreenShareService.setInProgress(false);
           };
