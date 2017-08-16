@@ -8,15 +8,18 @@
 (function () {
   'use strict';
 
-  angular.module("janusHangouts.eventsObservable", [])
-    .provider('jhEventsObservable', function () {
-      /* Rx object */
-      var Rx = window.Rx;
-      var eventsObservable = new Rx.Subject();
+  angular.module("janusHangouts.eventsProvider", [])
+    .provider('jhEventsProvider', function () {
+      var eventsConfig = {
+        eventsSubject: null
+      };
+      
       return {
         $get: function () {
-          console.log(eventsObservable);
-          return eventsObservable;
+          return eventsConfig;
+        },
+        $set: function(key, val) {
+          eventsConfig[key] = val;
         }
       };
     });

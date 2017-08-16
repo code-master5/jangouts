@@ -13,7 +13,7 @@
 
     RoomService.$inject = ['$q', '$rootScope', '$timeout', 'FeedsService', 'Room',
       'FeedConnection', 'DataChannelService', 'ActionService', 'jhConfig',
-      'ScreenShareService', 'RequestService', 'UserService', 'jhEventsObservable' ];
+      'ScreenShareService', 'RequestService', 'UserService', 'jhEventsProvider' ];
 
   /**
    * Service to communication with janus room
@@ -22,7 +22,7 @@
    */
   function RoomService($q, $rootScope, $timeout, FeedsService, Room,
       FeedConnection, DataChannelService, ActionService, jhConfig,
-      ScreenShareService, RequestService, UserService, jhEventsObservable) {
+      ScreenShareService, RequestService, UserService, jhEventsProvider) {
     this.enter = enter;
     this.leave = leave;
     this.setRoom = setRoom;
@@ -230,7 +230,7 @@
 
     // Enter the room
     function enter(username) {
-      jhEventsObservable.onNext({
+      jhEventsProvider.eventsSubject.onNext({
         type: "username",
         username: username
       });
