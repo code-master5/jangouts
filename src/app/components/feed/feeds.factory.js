@@ -15,14 +15,16 @@
   angular.module('janusHangouts')
     .factory('Feed', feedFactory);
 
-  feedFactory.$inject = ['$timeout', 'DataChannelService', 'SpeakObserver'];
+  feedFactory.$inject = ['$timeout', 'DataChannelService', 'SpeakObserver', 
+                         'jhEventsProvider', 'UserService'];
 
   /**
    * Factory representing a janus feed
    * @constructor
    * @memberof module:janusHangouts
    */
-  function feedFactory($timeout, DataChannelService, SpeakObserver) {
+  function feedFactory($timeout, DataChannelService, SpeakObserver, 
+                       jhEventsProvider, UserService) {
     return function(attrs) {
       attrs = attrs || {};
       var that = this;
@@ -290,6 +292,39 @@
                 if (options.after) { options.after(); }
                 // Send the new status to remote peers
                 DataChannelService.sendStatus(that, {exclude: "picture"});
+                if (type === 'video') { 
+                  console.log(((enabled === false) ? "VideoPause" : "VideoResume"));
+                  // Sending videoPause OR videoResume Event to callstats.io
+                  jhEventsProvider.eventsSubject.onNext({
+                    type: "video",
+                    opaqueId: {
+                      user: that.display,
+                      roomId: that.connection.roomId,
+                      roomDesc: that.connection.roomDesc,
+                      deviceId: UserService.getSetting('lastDeviceId')
+                    },
+                    data: {
+                      status: ((enabled === false) ? "Pause" : "Resume"),
+                      peerconnection: that.connection.pluginHandle.webrtcStuff.pc
+                    }
+                  });
+                } else if (type === 'audio') {
+                  // Sending audioMute OR audioUnmute Event to callstats.io
+                  console.log(((enabled === false) ? "Mute" : "Unmute"));
+                  jhEventsProvider.eventsSubject.onNext({
+                    type: "audio",
+                    opaqueId: {
+                      user: that.display,
+                      roomId: that.connection.roomId,
+                      roomDesc: that.connection.roomDesc,
+                      deviceId: UserService.getSetting('lastDeviceId')
+                    },
+                    data: {
+                      status: ((enabled === false) ? "Mute" : "Unmute"),
+                      peerconnection: that.connection.pluginHandle.webrtcStuff.pc
+                    }
+                  });
+                }
               });
             }
           });
