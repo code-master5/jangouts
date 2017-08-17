@@ -11,7 +11,8 @@
   angular.module('janusHangouts')
     .factory('FeedConnection', feedConnectionFactory);
 
-  feedConnectionFactory.$inject = ['ConnectionConfig'];
+  feedConnectionFactory.$inject = ['ConnectionConfig', 'jhEventsProvider',
+    'UserService'];
 
   /**
    * Manages the connection of a feed to the Janus server
@@ -27,7 +28,7 @@
    *  former to share the whole screen and the latter for sharing individual
    *  windows.
    */
-  function feedConnectionFactory(ConnectionConfig) {
+  function feedConnectionFactory(ConnectionConfig, jhEventsProvider, UserService) {
     return function(pluginHandle, roomId, roomDesc, role) {
       var that = this;
 
@@ -40,6 +41,22 @@
       console.log(this.role + " plugin attached (" + pluginHandle.getPlugin() + ", id=" + pluginHandle.getId() + ")");
 
       this.destroy = function() {
+        // emit 'handleDetached' event
+        jhEventsProvider.eventsSubject.onNext({
+          type: "pluginHandle",
+          timestamp: Date.now(),
+          opaqueId: {
+            user: UserService.getSetting('lastUsername'),
+            roomId: that.roomId,
+            roomDesc: that.roomDesc,
+            deviceId: UserService.getSetting('lastDeviceId')
+          },
+          data: {
+            status: "detached",
+            peerconnection: that.pluginHandle.webrtcStuff.pc
+          }
+        });
+        
         this.config = null;
         this.pluginHandle.detach();
       };
@@ -109,6 +126,23 @@
           error: function(error) {
             console.error("WebRTC error publishing");
             console.error(error);
+            
+            // emit 'publishingError' event
+            jhEventsProvider.eventsSubject.onNext({
+              type: "error",
+              timestamp: Date.now(),
+              opaqueId: {
+                user: UserService.getSetting('lastUsername'),
+                roomId: that.roomId,
+                roomDesc: that.roomDesc,
+                deviceId: UserService.getSetting('lastDeviceId')
+              },
+              data: {
+                status: "createOffer",
+                error: error,
+                peerconnection: that.pluginHandle.webrtcStuff.pc
+              }
+            });
             // Call the provided callback for extra actions
             if (options.error) { options.error(); }
           }
@@ -136,6 +170,22 @@
           error: function(error) {
             console.error("WebRTC error subscribing");
             console.error(error);
+            // emit 'subscribingError' event
+            jhEventsProvider.eventsSubject.onNext({
+              type: "error",
+              timestamp: Date.now(),
+              opaqueId: {
+                user: UserService.getSetting('lastUsername'),
+                roomId: that.roomId,
+                roomDesc: that.roomDesc,
+                deviceId: UserService.getSetting('lastDeviceId')
+              },
+              data: {
+                status: "createAnswer",
+                error: error,
+                peerconnection: that.pluginHandle.webrtcStuff.pc
+              }
+            });
           }
         });
       };

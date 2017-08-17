@@ -16,7 +16,7 @@
     .factory('Feed', feedFactory);
 
   feedFactory.$inject = ['$timeout', 'DataChannelService', 'SpeakObserver', 
-                         'jhEventsProvider', 'UserService'];
+    'jhEventsProvider', 'UserService'];
 
   /**
    * Factory representing a janus feed
@@ -24,7 +24,7 @@
    * @memberof module:janusHangouts
    */
   function feedFactory($timeout, DataChannelService, SpeakObserver, 
-                       jhEventsProvider, UserService) {
+    jhEventsProvider, UserService) {
     return function(attrs) {
       attrs = attrs || {};
       var that = this;
@@ -297,6 +297,7 @@
                   // Sending videoPause OR videoResume Event to callstats.io
                   jhEventsProvider.eventsSubject.onNext({
                     type: "video",
+                    timestamp: Date.now(),
                     opaqueId: {
                       user: that.display,
                       roomId: that.connection.roomId,
@@ -313,6 +314,7 @@
                   console.log(((enabled === false) ? "Mute" : "Unmute"));
                   jhEventsProvider.eventsSubject.onNext({
                     type: "audio",
+                    timestamp: Date.now(),
                     opaqueId: {
                       user: that.display,
                       roomId: that.connection.roomId,
