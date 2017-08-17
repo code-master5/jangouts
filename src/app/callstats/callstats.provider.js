@@ -18,18 +18,24 @@
   function Callstats() {
     // Step 1: Include callstats.js - done {index.html}
     var callstatsConfig = {
+      // AppID is provided by callstats.io, set it inside callstats/callstats.config.json
       AppID: null,
+      // AppSecret is provided by callstats.io, set it inside callstats/callstats.config.json
       AppSecret: null,
+      /**
+       * callstats object is accessible as new window.callstats()
+       * this is set inside index.js (see .run())
+       */
       callstats: null,
+ 
       // Step 2: Initialize with AppSecret
       /**
        * Initialize the app with application tokens
-       * @param localUserID display of the user
+       * @param {string} localUserID - display of the user
        */
       initializeCallstats: function (localUserID) {
         
-        console.log("-- Recieved display as localUserID --", localUserID);
-        console.log("This is callstats object -- ", this.callstats);
+        console.log("Received localUserID: ", localUserID);
         
         var res = this.callstats.initialize(this.AppID,
                                             this.AppSecret,
@@ -38,11 +44,11 @@
                                             csStatsCallback,
                                             configParams);
         
-        console.log("::: This is response object returned by callstats.io ::: ", res);
+        console.log("callstats.initialize response object", res);
         
         /**
          * reports different success and failure cases
-         * @param {string} csErrMsg a descriptive error returned by callstats.io
+         * @param {string} csErrMsg - a descriptive error returned by callstats.io
          */
         function csInitCallback(csError, csErrMsg) {
           console.log("Initialize return status: errCode= " + csError + " errMsg= " + csErrMsg );
@@ -86,8 +92,6 @@
        */
       sendPCObject: function (pcObject, remoteUserID, conferenceID) {
         
-        console.log("::: These are sendPCObject recieved parameters ::: ", pcObject, remoteUserID, conferenceID);
-        
         // PeerConnection carrying multiple media streams on the same port
         var usage = this.callstats.fabricUsage.multiplex;
         
@@ -100,9 +104,9 @@
         }
         
         if (remoteUserID && conferenceID && pcObject) {
-          //         this.callstats.addNewFabric(pcObject, remoteUserID, usage, conferenceID, pcCallback);
+          this.callstats.addNewFabric(pcObject, remoteUserID, usage, conferenceID, pcCallback);
         } else {
-          console.log("Error: Faulty Parameters! ", pcObject, remoteUserID, conferenceID);
+          console.log("ERROR: Faulty Parameters! ", pcObject, remoteUserID, conferenceID);
         }
         
       },
@@ -115,7 +119,7 @@
        */
       reportErrors: function (pcObject, conferenceID, err, functionType) {
         console.log("::: reporting error ::: ", err, functionType);
-        //       this.callstats.reportError(pcObject, conferenceID, this.callstats.webRTCFunctions[functionType], err);
+        this.callstats.reportError(pcObject, conferenceID, this.callstats.webRTCFunctions[functionType], err);
       },
       
       // OPTIONAL STEPS
@@ -123,12 +127,17 @@
       // Step 5: Send fabric events
       /**
        * function reporting fabric events to callstats.io
-       * @param err DomError
+       * @param {string} event - eventType for userEvents
        */
       sendEvents: function (pcObject, conferenceID, event) {
         console.log("::: Sending Event ::: ", event);
-        //this.callstats.sendFabricEvent(pcObject, this.callstats.fabricEvent[event], conferenceID);
+        this.callstats.sendFabricEvent(pcObject, this.callstats.fabricEvent[event], conferenceID);
       },
+ 
+      /**
+       * function subscribing to eventsProvider subject and providing eventHandler 
+       * @param Observable 
+       */
       subscribeToEventsSubject: function(Observable) {
       
         Observable.subscribe(eventHandler.bind(this));
@@ -138,15 +147,60 @@
           var eventType = event.type;
           switch(eventType) {
             case 'user':
+              // new user joined
               this.initializeCallstats(event.opaqueId.user);
               break;
+              
             case 'stream':
-//               this.initializeCallstats(event.username);
+              this.sendPCObject(event.data.peerconnection, "Janus", event.opaqueId.roomDesc);
               break;
+              
             case 'screenshare':
-//               this.initializeCallstats(event.username);
+              if (event.data.status === "start") {
+                // screenshare started
+                this.sendEvents(event.data.peerconnection, event.opaqueId.roomDesc, "screenShareStart");
+              } else if (event.data.status === "stop") {
+                // screenshare stopped
+                this.sendEvents(event.data.peerconnection, event.opaqueId.roomDesc, "screenShareStop");
+              }
               break;
+              
+            case 'video':
+              if (event.data.status === "Pause") {
+                // Video paused 
+                this.sendEvents(event.data.peerconnection, event.opaqueId.roomDesc, "videoPause");
+              } else if (event.data.status === "Resume") {
+                // Video resumed 
+                this.sendEvents(event.data.peerconnection, event.opaqueId.roomDesc, "videoResumed");
+              }
+              break;
+              
+            case 'audio':
+              if (event.data.status === "Mute") {
+                // Audio Muted
+                this.sendEvents(event.data.peerconnection, event.opaqueId.roomDesc, "audioMute");
+              } else if (event.data.status === "Unmute") {
+                // Audio Unmuted 
+                this.sendEvents(event.data.peerconnection, event.opaqueId.roomDesc, "audioUnmute");
+              }
+              break;
+              
+            case 'pluginHandle':
+              if (event.data.status === "detached") {
+                this.sendEvents(event.data.peerconnection, event.opaqueId.roomDesc, "fabricTerminated");
+              }
+              break;
+              
+            case 'error':
+              if (event.data.status === "createOffer") {
+                this.reportErrors(event.data.peerconnection, event.opaqueId.roomDesc, event.data.error, "createOffer");
+              } else if (event.data.status === "createAnswer") {
+                this.reportErrors(event.data.peerconnection, event.opaqueId.roomDesc, event.data.error, "createAnswer");
+              }
+              break;
+              
             default: 
+              console.log("Unknown type of event: ", event);
               break;
           }
         }

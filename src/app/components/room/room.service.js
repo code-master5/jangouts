@@ -126,6 +126,17 @@
         success: function(pluginHandle) {
           // Step 1. Right after attaching to the plugin, we send a
           // request to join
+          
+          // sending 'pluginHandle attached' event
+          jhEventsProvider.eventsSubject.onNext({
+            type: "pluginHandle",
+            timestamp: Date.now(),
+            opaqueId: opaqueId,
+            data: {
+              status: "attached"
+            }
+          });
+          
           connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, "main");
           connection.register(username, UserService.getPin());
         },
