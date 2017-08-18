@@ -122,7 +122,7 @@
       // Create new session
       that.janus.attach({
         plugin: "janus.plugin.videoroom",
-        opaque_id: JSON.stringify(opaqueId),
+        opaqueId: JSON.stringify(opaqueId),
         success: function(pluginHandle) {
           // Step 1. Right after attaching to the plugin, we send a
           // request to join
@@ -342,7 +342,7 @@
       
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
-        opaque_id: JSON.stringify(opaqueId),
+        opaqueId: JSON.stringify(opaqueId),
         success: function(pluginHandle) {
           connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, "subscriber");
           connection.listen(id, UserService.getPin());
@@ -432,7 +432,7 @@
       
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
-        opaque_id: JSON.stringify(opaqueId),
+        opaqueId: JSON.stringify(opaqueId),
         success: function(pluginHandle) {
           connection = new FeedConnection(pluginHandle, that.room.id, that.room.description, videoSource);
           connection.register(display, UserService.getPin());
