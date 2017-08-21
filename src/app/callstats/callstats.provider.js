@@ -1,5 +1,5 @@
 /** 
- * @file      callstats.service.js
+ * @file      callstats.provider.js
  * @author    Bimalkant Lauhny <lauhny.bimalk@gmail.com>
  * @copyright MIT License
  * @brief     A service that subscribes to eventsObservable

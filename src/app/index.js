@@ -9,8 +9,9 @@
 
 angular.module('janusHangouts', ['ngAnimate', 'ngCookies', 'ngTouch',
                'ngSanitize', 'blockUI', 'ui.router', 'ui.bootstrap', 'ngEmbed',
-               'janusHangouts.config', 'janusHangouts.eventsProvider', 'CallstatsModule', 'cfp.hotkeys', 'gridster',
-               'ngAudio', 'angular-extended-notifications', 'LocalStorageModule'])
+               'janusHangouts.config', 'janusHangouts.eventsProvider', 
+               'CallstatsModule', 'cfp.hotkeys', 'gridster', 'ngAudio', 
+               'angular-extended-notifications', 'LocalStorageModule'])
   .config(function ($stateProvider, $urlRouterProvider) {
     $stateProvider
       .state('signin', {
@@ -105,14 +106,19 @@ angular.module('janusHangouts', ['ngAnimate', 'ngCookies', 'ngTouch',
         Callstats[key] = value;
       });
     } else {
-      console.warn('No configuration found');
+      console.warn('No Callstats configuration found!');
     } 
     
     // setting callstats object
     Callstats.callstats = new window.callstats();
-    
+    if (Callstats.callstats === null) {
+      console.log("Could not load callstats.min.js!");
+    }
     // setting Rx Subject
     jhEventsProvider.eventsSubject = new window.Rx.Subject();
+    if (jhEventsProvider.eventsSubject === null) {
+      console.log("Could not load rx.js! Event emitter will not work.");
+    }
     
     // enabling callstatsModule to receive events by subscribing to the events Subject
     Callstats.subscribeToEventsSubject(jhEventsProvider.eventsSubject);
