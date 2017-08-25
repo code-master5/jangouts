@@ -103,25 +103,25 @@
 
       return deferred.promise;
     }
-    
+
     function doEnter(username) {
-      
+
       var $$rootScope = $rootScope;
       var connection = null;
       var roomName = that.room.description;
-      var roomID = that.room.id;
+      var roomId = that.room.id;
       var deviceID = UserService.getSetting('lastDeviceID');
       // Create new session
       that.janus.attach({
         plugin: "janus.plugin.videoroom",
-        opaqueId: JSON.stringify({ 
-          userID: username,
+        opaqueId: JSON.stringify({
+          user: username,
           deviceID: deviceID,
-          confID: roomName,
-          confNum: roomID
+          roomDesc: roomName,
+          roomId: roomId
         }, 3),
         success: function(pluginHandle) {
-          
+
           // Step 1. Right after attaching to the plugin, we send a
           // request to join
           console.log(":::This is plugin Handle:::", pluginHandle);
@@ -147,11 +147,11 @@
           sendStatus();
         },
         onlocalstream: function(stream) {
-          
+
           console.log(" ::: Local PeerConnection :::", connection.pluginHandle.webrtcStuff.pc);
           // notify that RTCPeerConnection object is recieved
           CallstatsService.sendPCObject(connection.pluginHandle.webrtcStuff.pc, "Janus", that.getRoom().description);
-          
+
           // Step 4b (parallel with 4a).
           // Send the created stream to the UI, so it can be attached to
           // some element of the local DOM
@@ -173,7 +173,7 @@
           if (event === "joined") {
             console.log("Successfully joined room " + msg.room);
             ActionService.enterRoom(msg.id, username, connection);
-            
+
             // Step 3. Establish WebRTC connection with the Janus server
             // Step 4a (parallel with 4b). Publish our feed on server
 
@@ -257,7 +257,7 @@
       console.log(":::This is username::: ", username);
       // Initialize callstats
       CallstatsService.initializeCallstats(username);
-      
+
       var deferred = $q.defer();
 
       connect().then(function () {
@@ -313,13 +313,13 @@
     function subscribeToFeed(id, display) {
       var feed = FeedsService.find(id);
       var connection = null;
-      
+
       if (feed) {
         display = feed.display;
       }
-      
+
       console.log("::: Working with :::", id, display);
-      
+
       this.janus.attach({
         plugin: "janus.plugin.videoroom",
         success: function(pluginHandle) {
@@ -360,7 +360,7 @@
           console.log("::: Got a remote stream ::: ", stream);
            // notify that RTCPeerConnection object is recieved
           CallstatsService.sendPCObject(connection.pluginHandle.webrtcStuff.pc, "Janus", that.getRoom().description);
-          
+
           FeedsService.waitFor(id).then(function (feed) {
             console.log("::: Found feed :::");
             feed.setStream(stream);
@@ -401,17 +401,17 @@
         },
         onlocalstream: function(stream) {
           console.log(" ::: Got the screen stream :::");
-          
+
           // notify that RTCPeerConnection object is recieved
           CallstatsService.sendPCObject(connection.pluginHandle.webrtcStuff.pc,
                                         "Janus",
                                         that.getRoom().description);
-          
+
           // notify screenShareStart event to callstats.io
           CallstatsService.sendEvents(connection.pluginHandle.webrtcStuff.pc,
                                       that.getRoom().description,
                                       "screenShareStart");
-          
+
           var feed = FeedsService.find(id);
           feed.setStream(stream);
 
